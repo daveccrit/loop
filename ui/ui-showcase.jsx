@@ -1397,6 +1397,11 @@
                            warnings={caughtWarnings} />,
                    document.querySelector("#results"));
     }, 1000);
+
+    // Wait until page has been painted and iframes adjusted before scrolling to hashtag
+    setTimeout(function() {
+      location.hash = location.hash;
+    }, 5000);
   });
 
 })();

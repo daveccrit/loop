@@ -19,31 +19,53 @@ loop.panel = (function(_, mozL10n) {
   var GettingStartedView = React.createClass({
     mixins: [sharedMixins.WindowCloseMixin],
 
+    propTypes: {
+      gettingStartedContainer: React.PropTypes.string.isRequired
+    },
+
     handleButtonClick: function() {
       loop.request("OpenGettingStartedTour");
       this.closeWindow();
     },
 
-    render: function() {
-      return (
-        <div className="fte-get-started-content">
-          <div className="fte-title">
-            <img className="fte-logo" src="shared/img/hello_logo.svg" />
-            <div className="fte-subheader">
-              {mozL10n.get("first_time_experience_subheading2")}
-            </div>
-            <hr className="fte-separator"/>
-            <div className="fte-content">
-              {mozL10n.get("first_time_experience_content")}
-            </div>
-            <img className="fte-hello-web-share" src="shared/img/hello-web-share.svg" />
-          </div>
+    renderGettingStartedButton: function() {
+      if (this.props.gettingStartedContainer === "ftu") {
+        return (
           <div className="fte-button-container">
             <Button additionalClass="fte-get-started-button"
                     caption={mozL10n.get("first_time_experience_button_label2")}
                     htmlId="fte-button"
                     onClick={this.handleButtonClick} />
           </div>
+        );
+      }
+    },
+
+    render: function() {
+      var fteClasses = classNames({
+        "fte-get-started-content": true,
+        "fte-get-started-content-borders": this.props.gettingStartedContainer === "roomlist"
+      });
+
+      return (
+        <div className={fteClasses}>
+          <div className="fte-title">
+            <img className="fte-logo" src="shared/img/hello_logo.svg" />
+            <div className="fte-subheader">
+              {this.props.gettingStartedContainer === "ftu" ?
+                  mozL10n.get("first_time_experience_subheading2") :
+                  mozL10n.get("first_time_experience_subheading_button_above")}
+            </div>
+            {this.props.gettingStartedContainer === "ftu" ?
+              <hr className="fte-separator"/> : null}
+            <div className="fte-content">
+              {this.props.gettingStartedContainer === "ftu" ?
+                  mozL10n.get("first_time_experience_content") :
+                  mozL10n.get("first_time_experience_content2")}
+            </div>
+            <img className="fte-hello-web-share" src="shared/img/hello-web-share.svg" />
+          </div>
+          {this.renderGettingStartedButton()}
         </div>
       );
     }
@@ -758,7 +780,7 @@ loop.panel = (function(_, mozL10n) {
               "rooms_list_currently_browsing2")}</h1>
           }
           {!this.state.rooms.length ?
-            <div className="room-list-empty" /> :
+            <GettingStartedView gettingStartedContainer="roomlist" /> :
             <div className={roomListClasses}>{
               this.state.rooms.map(function(room) {
                 if (this.state.openedRoom !== null &&
@@ -1032,7 +1054,7 @@ loop.panel = (function(_, mozL10n) {
             <NotificationListView
               clearOnDocumentHidden={true}
               notifications={this.props.notifications} />
-            <GettingStartedView />
+            <GettingStartedView gettingStartedContainer="ftu" />
             <ToSView />
           </div>
         );

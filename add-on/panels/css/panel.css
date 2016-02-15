@@ -639,11 +639,7 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
 
 .fte-get-started-content {
   /* Manual vertical centering */
-  flex: 1;
   padding: 2rem 0 0;
-  display: flex;
-  flex-direction: column;
-  height: 553px;
 }
 
 .fte-title {
@@ -656,6 +652,7 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
 
 img.fte-logo {
   height: 32px;
+  display: block;
 }
 
 .fte-subheader, .fte-content {
@@ -681,10 +678,10 @@ img.fte-logo {
 }
 
 img.fte-hello-web-share {
-  /* Set custom SVG size and position to align with powered-by-wrapper element. */
+  /* Set custom SVG size to align with powered-by-wrapper element. */
   width: 290px;
-  height: 148px;
-  margin-bottom: -4px;
+  height: 168px;
+  display: block;
 }
 
 .fte-get-started-content + .powered-by-wrapper {
@@ -704,6 +701,10 @@ img.fte-hello-web-share {
   background: #fbfbfb;
 }
 
+.fte-get-started-content-borders {
+  border-top: 1px solid #D8D8D8;
+  border-bottom: 1px solid #D8D8D8;
+}
 .fte-button-container {
   border-top: 1px solid #ccc;
   padding: 8px 8px 0;
