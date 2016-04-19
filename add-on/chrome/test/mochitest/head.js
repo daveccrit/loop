@@ -99,9 +99,9 @@ function waitForCondition(condition, nextTest, errorMsg) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
-function promiseWaitForCondition(aConditionFn) {
+function promiseWaitForCondition(aConditionFn, aTimeoutMsg = "Condition didn't pass.") {
   return new Promise((resolve) => {
-    waitForCondition(aConditionFn, resolve, "Condition didn't pass.");
+    waitForCondition(aConditionFn, resolve, aTimeoutMsg);
   });
 }
 
