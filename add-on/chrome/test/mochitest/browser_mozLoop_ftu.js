@@ -10,6 +10,7 @@ const PREF_FTU_VERSION = "loop.gettingStarted.latestFTUVersion";
 
 // Pref set to default value check
 add_task(function* setup() {
+  Services.prefs.setCharPref("loop.debug.loglevel", "All");
   Services.prefs.setIntPref(PREF_FTU_VERSION, 0);
 
   registerCleanupFunction(function* () {
@@ -75,6 +76,11 @@ add_task(function* test_mozLoop_close_tour() {
   let slideshowDoc = document.getElementById("loop-slideshow-browser").contentDocument;
 
   slideshowDoc.getElementsByClassName("button-close")[0].click();
+
+  let loopButton = document.getElementById("loop-button");
+  yield promiseWaitForCondition(() => {
+    return loopButton.open;
+  }, "Panel should be open after slideshow is closed");
 
   yield promiseWaitForCondition(() => {
     return document.getElementById("loop-notification-panel").state == "open";

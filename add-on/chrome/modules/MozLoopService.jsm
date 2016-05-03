@@ -2006,7 +2006,11 @@ this.MozLoopService = {
     xulWin.LoopUI.isSlideshowOpen = true;
 
     var removeSlideshow = function() {
+      log.info("removeSlideshow called");
       try {
+        xulBrowser.contentWindow.removeEventListener("CloseSlideshow",
+          removeSlideshow);
+
         appContent.removeChild(box);
       } catch (ex) {
         log.error(ex);
@@ -2018,8 +2022,6 @@ this.MozLoopService = {
       // and updating the toolbar.
       xulWin.LoopUI.isSlideshowOpen = false;
       xulWin.LoopUI.openPanel();
-
-      xulWin.removeEventListener("CloseSlideshow", removeSlideshow);
 
       log.info("slideshow removed");
     }.bind(this);
