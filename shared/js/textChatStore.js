@@ -5,7 +5,7 @@
 var loop = loop || {};
 loop.store = loop.store || {};
 
-loop.store.TextChatStore = (function() {
+loop.store.TextChatStore = (function(mozL10n) {
   "use strict";
 
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES = {
@@ -24,11 +24,11 @@ loop.store.TextChatStore = (function() {
     actions: [
       "dataChannelsAvailable",
       "receivedTextChatMessage",
+      "remotePeerLeftChat",
+      "remotePeerJoinedChat",
       "sendTextChatMessage",
       "updateRoomInfo",
       "updateRoomContext",
-      "remotePeerDisconnected",
-      "remotePeerConnected",
       "setOwnDisplayName",
       "addedPage"
     ],
@@ -240,24 +240,30 @@ loop.store.TextChatStore = (function() {
 
 
     /**
-     * Handles a remote peer disconnecting from the session.
+     * Handles a remote peer disconnecting from the chat.
      * With specific to text chat area, we will put a notification
      * when the peer has left the room or unexpectedly quit.
      *
-     * @param  {sharedActions.remotePeerDisconnected} actionData
+     * @param  {sharedActions.remotePeerLeftChat} actionData
      */
-    remotePeerDisconnected: function(actionData) {
+    remotePeerLeftChat: function(actionData) {
       var notificationTextKey;
 
       if (actionData.peerHungup) {
-        notificationTextKey = "peer_left_session";
+        notificationTextKey = "peer_left_session2";
       } else {
-        notificationTextKey = "peer_unexpected_quit";
+        notificationTextKey = "peer_unexpected_quit2";
+      }
+
+      if (!actionData.participantName) {
+        actionData.participantName = mozL10n.get("peer_no_name");
       }
 
       var message = {
         contentType: CHAT_CONTENT_TYPES.NOTIFICATION,
-        message: notificationTextKey,
+        message: mozL10n.get(notificationTextKey, {
+          participantName: actionData.participantName
+        }),
         receivedTimestamp: (new Date()).toISOString(),
         extraData: {
           peerStatus: "disconnected"
@@ -267,12 +273,16 @@ loop.store.TextChatStore = (function() {
       this._appendTextChatMessage(CHAT_MESSAGE_TYPES.RECEIVED, message);
     },
 
-    remotePeerConnected: function() {
-      var notificationTextKey = "peer_join_session";
+    remotePeerJoinedChat: function(actionData) {
+      if (!actionData.participantName) {
+        actionData.participantName = mozL10n.get("peer_no_name");
+      }
 
       var message = {
         contentType: CHAT_CONTENT_TYPES.NOTIFICATION,
-        message: notificationTextKey,
+        message: mozL10n.get("peer_join_session2", {
+          participantName: actionData.participantName
+        }),
         receivedTimestamp: (new Date()).toISOString(),
         extraData: {
           peerStatus: "connected"
@@ -347,4 +357,4 @@ loop.store.TextChatStore = (function() {
   });
 
   return TextChatStore;
-})();
+})(navigator.mozL10n || document.mozL10n);

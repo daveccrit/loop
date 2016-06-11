@@ -83,7 +83,7 @@ loop.shared.views.chat = (function(mozL10n) {
                           "shared/img/join_notification.svg" :
                           "shared/img/leave_notification.svg"
                    } />
-              <p>{mozL10n.get(this.props.message)}</p>
+              <p>{this.props.message}</p>
             </div>
             {this.props.showTimestamp ? this._renderTimestamp() : null}
            </div>

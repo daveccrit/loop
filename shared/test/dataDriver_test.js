@@ -77,7 +77,7 @@ describe("loop.DataDriver", () => {
 
       let { method, requestBody, url } = requests[0];
       expect(method).eql("PUT");
-      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"url":"http://example.com","title":"cool page"}}');
+      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"url":"http://example.com","title":"cool page"},"async":true}');
       expect(url.match(/([^\/]+).{12}\.json$/)[1]).eql("page!00000000");
     });
   });
@@ -88,7 +88,7 @@ describe("loop.DataDriver", () => {
 
       let { method, requestBody, url } = requests[0];
       expect(method).eql("PUT");
-      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"}}');
+      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"async":true}');
       expect(getResource(url)).eql("page!thePageId.json");
     });
   });
@@ -102,7 +102,7 @@ describe("loop.DataDriver", () => {
 
       let { method, requestBody, url } = requests[0];
       expect(method).eql("PUT");
-      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"contentType":"chat-text","message":"Are you there?"}}');
+      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"contentType":"chat-text","message":"Are you there?"},"async":true}');
       expect(url.match(/([^\/]+).{12}\.json$/)[1]).eql("chat!00000000");
     });
   });
@@ -115,7 +115,7 @@ describe("loop.DataDriver", () => {
 
       let { method, requestBody, url } = requests[0];
       expect(method).eql("PUT");
-      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"participantName":"Cool Name"}}');
+      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"participantName":"Cool Name"},"async":true}');
       expect(getResource(url)).eql("participant!theUserId.json");
     });
   });
@@ -128,7 +128,7 @@ describe("loop.DataDriver", () => {
 
       let { method, requestBody, url } = requests[0];
       expect(method).eql("PUT");
-      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"isHere":true,"focused":false}}');
+      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"isHere":true,"focused":false},"async":true}');
       expect(getResource(url)).eql("presence!theUserId.json");
     });
 
@@ -139,7 +139,7 @@ describe("loop.DataDriver", () => {
 
       let { method, requestBody, url } = requests[0];
       expect(method).eql("PUT");
-      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"isHere":false,"focused":false}}');
+      expect(requestBody).eql('{"timestamp":{".sv":"timestamp"},"value":{"isHere":false,"focused":false},"async":true}');
       expect(getResource(url)).eql("presence!theUserId.json");
     });
   });

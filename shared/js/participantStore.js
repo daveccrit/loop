@@ -14,8 +14,11 @@ loop.store.ParticipantStore = function() {
   const PARTICIPANT_SCHEMA = {
     participantName: "",
     isHere: false,
+    hasNotifiedOfJoin: false,
     localPingTime: null
   };
+
+  var sharedActions = loop.shared.actions;
 
   /**
    * Participant store.
@@ -37,11 +40,9 @@ loop.store.ParticipantStore = function() {
       if (options.updateParticipant) {
         this._currentUserObject = {};
         this.dispatcher.register(this, [
-          "leaveRoom",
           "setOwnDisplayName"
         ]);
       }
-
       this._expireTimer = null;
     },
 
@@ -54,7 +55,8 @@ loop.store.ParticipantStore = function() {
     actions: [
       "updatedParticipant",
       "updatedPresence",
-      "updateRoomInfo"
+      "updateRoomInfo",
+      "windowUnload"
     ],
 
     /**
@@ -65,10 +67,10 @@ loop.store.ParticipantStore = function() {
     },
 
     /**
-     * Handle LeaveRoom action by updating the current user's presence.
+     * Handle window unload action by updating the current user's presence.
      */
-    leaveRoom() {
-      this._updatePresence(false);
+    windowUnload() {
+      this._updatePresence(false, false);
     },
 
     /**
@@ -86,21 +88,23 @@ loop.store.ParticipantStore = function() {
         return;
       }
 
-      this._updateParticipantData(actionData.userId, {
-        participantName: actionData.participantName
-      });
+      if (actionData.userId) {
+        this._updateParticipantData(actionData.userId, {
+          participantName: actionData.participantName
+        });
+      }
     },
 
     updatedPresence(actionData) {
       if (actionData.userId === this._currentUserId) {
         return;
       }
-
-      this._updateParticipantData(actionData.userId, {
-        isHere: actionData.isHere,
-        localPingTime: Date.now() - actionData.pingedAgo
-      });
-
+      if (actionData.userId) {
+        this._updateParticipantData(actionData.userId, {
+          isHere: actionData.isHere,
+          localPingTime: Date.now() - actionData.pingedAgo
+        });
+      }
       // We just got some presence that we might need to expire later.
       if (this._expireTimer === null) {
         this._expireTimer = setTimeout(() => this._expirePresence(), PING_TIME);
@@ -119,9 +123,28 @@ loop.store.ParticipantStore = function() {
         }
       }
 
+      if (!updatedParticipant.hasNotifiedOfJoin &&
+          updatedParticipant.isHere &&
+          !this._isPresenceExpired(updatedParticipant.localPingTime)) {
+        this._sendJoinNotification(updatedParticipant);
+      } else if (updatedParticipant.hasNotifiedOfJoin &&
+                 !updatedParticipant.isHere) {
+        this._sendLeaveNotification(updatedParticipant, true);
+      }
+
       this.setStoreState({
         participants: this._storeState.participants.set(userId, updatedParticipant)
       });
+    },
+
+    /**
+     * Determines if Presence has expired
+     *
+     * @param participantData
+     * @returns {boolean}
+     */
+    _isPresenceExpired(localPingTime) {
+      return Date.now() - localPingTime > PING_TIME;
     },
 
     /**
@@ -138,9 +161,15 @@ loop.store.ParticipantStore = function() {
         // We're only interested in participants that might be here.
         if (participant.isHere) {
           // For presence records that are expired, mark them as not here.
-          if (Date.now() - participant.localPingTime > PING_TIME) {
+          if (this._isPresenceExpired(participants.localPingTime)) {
             participant.isHere = false;
             expiredAny = true;
+            // Chat has already been notified of this participants join. When
+            // participant presence expires, user is notified of participant
+            // has left
+            if (participant.hasNotifiedOfJoin) {
+              this._sendLeaveNotification(participant, false);
+            }
           }
           // Remember that there's someone here.
           else {
@@ -178,19 +207,52 @@ loop.store.ParticipantStore = function() {
     },
 
     /**
+     * Handle Participant Join/Leave Message Notification.
+     *
+     * @param participantData
+     * @param hangup
+     */
+    _sendLeaveNotification(participantData, hangup) {
+      if (!participantData || !participantData.hasNotifiedOfJoin) {
+        return;
+      }
+
+      this.dispatcher.dispatch(new sharedActions.RemotePeerLeftChat({
+        participantName: participantData.participantName,
+        peerHungup: hangup
+      }));
+    },
+
+    /**
+     * Handle Participant Join/Leave Message Notification.
+     *
+     * @param participantData
+     */
+    _sendJoinNotification(participantData) {
+      if (!participantData || participantData.hasNotifiedOfJoin) {
+        return;
+      }
+      participantData.hasNotifiedOfJoin = true;
+
+      this.dispatcher.dispatch(new sharedActions.RemotePeerJoinedChat({
+        participantName: participantData.participantName
+      }));
+    },
+
+    /**
      * Update the presence for the current user.
      *
      * @param {Boolean} isHere True to indicate the user hasn't left.
+     * @param {Boolean} shutdownSequence Is this a shutdown Sequence?
      */
-    _updatePresence(isHere) {
+    _updatePresence(isHere, asyncRequest = true) {
       clearTimeout(this._presenceTimer);
       this._presenceTimer = null;
-
-      this._dataDriver.updateCurrentPresence(this._currentUserId, isHere);
+      this._dataDriver.updateCurrentPresence(this._currentUserId, isHere, asyncRequest);
 
       // Keep updating the presence until the user leaves.
       if (isHere) {
-        this._presenceTimer = setTimeout(() => this._updatePresence(isHere), PING_TIME);
+        this._presenceTimer = setTimeout(() => this._updatePresence(isHere, asyncRequest), PING_TIME);
       }
     },
 

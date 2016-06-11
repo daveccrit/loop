@@ -30,6 +30,10 @@ describe("loop.store.TextChatStore", function() {
     sandbox.stub(window, "CustomEvent", function(name) {
       this.name = name;
     });
+
+    sandbox.stub(document.mozL10n ? document.mozL10n : navigator.mozL10n, "get", function(x) {
+      return x;
+    });
   });
 
   afterEach(function() {
@@ -333,42 +337,61 @@ describe("loop.store.TextChatStore", function() {
     });
   });
 
-  describe("#remotePeerDisconnected", function() {
 
-    it("should append the right message when peer disconnected cleanly", function() {
-      store.remotePeerDisconnected(new sharedActions.RemotePeerDisconnected({
-        peerHungup: true
-      }));
-
-      expect(store.getStoreState("messageList").length).eql(1);
-      expect(store.getStoreState("messageList")[0].contentType).eql(
-          CHAT_CONTENT_TYPES.NOTIFICATION
-      );
-      expect(store.getStoreState("messageList")[0].message).eql("peer_left_session");
-    });
-
-    it("should append the right message when peer disconnected unexpectedly", function() {
-      store.remotePeerDisconnected(new sharedActions.RemotePeerDisconnected({
+  describe("#remotePeerLeftChat", function() {
+    it("should add Chat message on unexpected hangup", function() {
+      let actionData = {
+        participantName: "Bill",
         peerHungup: false
-      }));
+      };
 
-      expect(store.getStoreState("messageList").length).eql(1);
-      expect(store.getStoreState("messageList")[0].contentType).eql(
-          CHAT_CONTENT_TYPES.NOTIFICATION
-      );
-      expect(store.getStoreState("messageList")[0].message).eql("peer_unexpected_quit");
+      store.remotePeerLeftChat(actionData);
+      expect(store.getStoreState("messageList")).eql([{
+        type: CHAT_MESSAGE_TYPES.RECEIVED,
+        contentType: CHAT_CONTENT_TYPES.NOTIFICATION,
+        message: "peer_unexpected_quit2",
+        extraData: {
+          peerStatus: "disconnected"
+        },
+        receivedTimestamp: "1970-01-01T00:00:00.000Z"
+      }]);
     });
-  });
 
-  describe("#remotePeerConnected", function() {
-    it("should append the right message when peer connected", function() {
-      store.remotePeerConnected(new sharedActions.RemotePeerConnected());
+    it("should add Chat message on expected hangup", function() {
+      let actionData = {
+        participantName: "Bill",
+        peerHungup: true
+      };
 
-      expect(store.getStoreState("messageList").length).eql(1);
-      expect(store.getStoreState("messageList")[0].contentType).eql(
-          CHAT_CONTENT_TYPES.NOTIFICATION
-      );
-      expect(store.getStoreState("messageList")[0].message).eql("peer_join_session");
+      store.remotePeerLeftChat(actionData);
+
+      expect(store.getStoreState("messageList")).eql([{
+        type: CHAT_MESSAGE_TYPES.RECEIVED,
+        contentType: CHAT_CONTENT_TYPES.NOTIFICATION,
+        message: "peer_left_session2",
+        extraData: {
+          peerStatus: "disconnected"
+        },
+        receivedTimestamp: "1970-01-01T00:00:00.000Z"
+      }]);
+    });
+
+    it("should add 'Guest' to chat message on no name given", function() {
+      let actionData = {
+        peerHungup: true
+      };
+
+      store.remotePeerLeftChat(actionData);
+
+      expect(store.getStoreState("messageList")).eql([{
+        type: CHAT_MESSAGE_TYPES.RECEIVED,
+        contentType: CHAT_CONTENT_TYPES.NOTIFICATION,
+        message: "peer_left_session2",
+        extraData: {
+          peerStatus: "disconnected"
+        },
+        receivedTimestamp: "1970-01-01T00:00:00.000Z"
+      }]);
     });
   });
 });

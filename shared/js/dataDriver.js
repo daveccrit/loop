@@ -129,10 +129,14 @@ loop.DataDriver = function() {
      * @param {String}  userId   The id to associate with stored presence.
      * @param {Boolean} isHere   Is the current user here (true) or left (false)?
      * @param {Object}  presence The data to be stored and received by others.
+     * @param {Boolean} shutdownSequence   Is shutdown Sequence? (false)
      */
-    updateCurrentPresence(userId, isHere, presence) {
+    updateCurrentPresence(userId, isHere, presence, asyncRequest = true) {
       // XXX akita bug 1276095: Verify userId is a valid firebase id.
-      this.update("presence", userId, Object.assign({ isHere }, presence));
+      this.update("presence",
+        userId,
+        Object.assign({ isHere }, presence),
+        asyncRequest);
     }
 
     /** **************** **
@@ -316,17 +320,19 @@ loop.DataDriver = function() {
      * @param {String} type  Type of record to update.
      * @param {String} id    Id of record to update.
      * @param {Mixed}  value Some value to store for the record.
+     * @param {Boolean}  Is shutdown sequence? (false)
      *
      * @return {Promise} Resolved with an {Object} of the updated record.
      */
-    update(type, id, value) {
+    update(type, id, value, asyncRequest = true) {
       // XXX akita bug 1274110: Validate for certain types.
       let key = `${type}!${id}`;
       return this._request("PUT", this._buildUrl(key), {
         "timestamp": {
           ".sv": "timestamp"
         },
-        value: value
+        value: value,
+        async: asyncRequest
       });
     }
 
@@ -476,16 +482,19 @@ loop.DataDriver = function() {
      * @param {String} method The type of HTTP request.
      * @param {String} url    Location to make the request.
      * @param {Mixed}  data   Either GET query params or request body.
+     * @param {Boolean}  async   Send asynchronous request? (true)
      *
      * @return {Promise} Resolved with an {Object} of the response.
      */
-    _request(method, url, data) {
+    _request(method, url, data, async = true) {
+      // 4th Param for Async
       let isGet = method === "GET";
       let body = isGet ? undefined : data;
       let query = isGet && data ? `?${data}` : "";
       return new Promise((resolve, reject) => {
         let request = new XMLHttpRequest();
-        request.open(method, url + query);
+        // 3rd Param for Async to request.open (Default is true)
+        request.open(method, url + query, async);
         request.onload = () => {
           if (request.status === 200) {
             resolve(JSON.parse(request.responseText));

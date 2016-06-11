@@ -111,6 +111,21 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to notify that peer has joined chat session.
+     */
+    RemotePeerJoinedChat: Action.define("remotePeerJoinedChat", {
+      participantName: String
+    }),
+
+    /**
+     * Used to notify that peer has left chat session.
+     */
+    RemotePeerLeftChat: Action.define("remotePeerLeftChat", {
+      participantName: String,
+      peerHungup: Boolean
+    }),
+
+    /**
      * Used to send a message to the other peer.
      */
     SendTextChatMessage: Action.define("sendTextChatMessage", {

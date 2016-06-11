@@ -93,7 +93,7 @@ loop.Dispatcher = (function() {
       this._active = true;
 
       if (this._debug) {
-        console.log("[Dispatcher] Dispatching action", action);
+        console.error("[Dispatcher] Dispatching action", action);
       }
 
       registeredStores.forEach(function(store) {
